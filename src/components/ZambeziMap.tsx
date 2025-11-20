@@ -1,10 +1,13 @@
-import { MapContainer, TileLayer, Polyline, Marker, Popup, CircleMarker } from 'react-leaflet';
+import { MapContainer, TileLayer, Polyline, Marker, Popup, CircleMarker, Polygon } from 'react-leaflet';
 import L, { LatLngExpression, LatLngLiteral } from 'leaflet';
 import { useMemo } from 'react';
 
 interface ZambeziMapProps {
   route: LatLngLiteral[];
   position: LatLngLiteral;
+  threatVisible: boolean;
+  wetlands: LatLngLiteral[][];
+  corridor: LatLngLiteral[];
 }
 
 interface ThreatMarker {
@@ -52,7 +55,7 @@ const threatIcon = L.divIcon({
   iconAnchor: [9, 9],
 });
 
-const ZambeziMap = ({ route, position }: ZambeziMapProps) => {
+const ZambeziMap = ({ route, position, threatVisible, wetlands, corridor }: ZambeziMapProps) => {
   const bounds = useMemo(() => L.latLngBounds(route), [route]);
 
   return (
@@ -73,15 +76,34 @@ const ZambeziMap = ({ route, position }: ZambeziMapProps) => {
 
       <Marker position={position} icon={expeditionIcon} />
 
-      {threatMarkers.map((marker) => (
-        <Marker key={`${marker.position.lat}-${marker.position.lng}`} position={marker.position} icon={threatIcon}>
-          <Popup>
-            <strong>{marker.label}</strong>
-            <br />
-            Simulated alert near the Zambezi source.
-          </Popup>
-        </Marker>
+      {wetlands.map((patch, idx) => (
+        <Polygon
+          key={`wetland-${idx}`}
+          pathOptions={{ color: '#22c55e', fillColor: '#22c55e', weight: 1, fillOpacity: 0.18 }}
+          positions={patch}
+        />
       ))}
+
+      {corridor.length > 0 && (
+        <Polyline
+          positions={corridor}
+          color="#f97316"
+          weight={3}
+          dashArray="8,6"
+          opacity={0.7}
+        />
+      )}
+
+      {threatVisible &&
+        threatMarkers.map((marker) => (
+          <Marker key={`${marker.position.lat}-${marker.position.lng}`} position={marker.position} icon={threatIcon}>
+            <Popup>
+              <strong>{marker.label}</strong>
+              <br />
+              Simulated alert near the Zambezi source.
+            </Popup>
+          </Marker>
+        ))}
     </MapContainer>
   );
 };

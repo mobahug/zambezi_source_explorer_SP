@@ -15,6 +15,14 @@ interface Metrics {
   heartRate: number;
   ph: number;
   updateInterval: string;
+  baseflowContribution: number;
+  downstreamPopulation: number;
+}
+
+interface OverlayToggles {
+  showThreats: boolean;
+  showWetlands: boolean;
+  showCorridor: boolean;
 }
 
 const ROUTE: LatLngLiteral[] = [
@@ -30,6 +38,27 @@ const ROUTE: LatLngLiteral[] = [
 
 const UPDATE_INTERVAL_MS = 2000;
 const STEP_DELTA = 0.055;
+
+const wetlandPatches: LatLngLiteral[][] = [
+  [
+    { lat: -12.31, lng: 22.21 },
+    { lat: -12.29, lng: 22.33 },
+    { lat: -12.23, lng: 22.38 },
+    { lat: -12.19, lng: 22.28 },
+  ],
+  [
+    { lat: -12.15, lng: 22.55 },
+    { lat: -12.12, lng: 22.63 },
+    { lat: -12.08, lng: 22.59 },
+    { lat: -12.12, lng: 22.5 },
+  ],
+];
+
+const corridorLine: LatLngLiteral[] = [
+  { lat: -12.35, lng: 22.14 },
+  { lat: -12.02, lng: 22.98 },
+  { lat: -12.14, lng: 23.45 },
+];
 
 function toRad(value: number): number {
   return (value * Math.PI) / 180;
@@ -93,6 +122,21 @@ function App() {
   const [ph, setPh] = useState(7);
   const [currentPosition, setCurrentPosition] = useState<LatLngLiteral>(ROUTE[0]);
   const [telemetryData, setTelemetryData] = useState<TelemetryPoint[]>([]);
+  const [overlays, setOverlays] = useState<OverlayToggles>({
+    showThreats: true,
+    showWetlands: true,
+    showCorridor: true,
+  });
+
+  const baseflowContribution = useMemo(
+    () => 64 + Math.sin(progress * Math.PI * 2) * 4 + Math.random() * 1.5,
+    [progress],
+  );
+
+  const downstreamPopulation = useMemo(
+    () => 24000000 + Math.sin(timeTick / 8) * 100000,
+    [timeTick],
+  );
 
   useEffect(() => {
     const id = window.setInterval(() => {
@@ -126,6 +170,8 @@ function App() {
     heartRate,
     ph,
     updateInterval: `${UPDATE_INTERVAL_MS / 1000} seconds`,
+    baseflowContribution: Number(baseflowContribution.toFixed(1)),
+    downstreamPopulation: Math.round(downstreamPopulation),
   };
 
   return (
@@ -141,11 +187,22 @@ function App() {
         <Grid container spacing={2} sx={{ minHeight: { xs: 'auto', md: '90vh' } }}>
           <Grid item xs={12} md={7.5}>
             <Stack sx={{ height: { xs: 360, md: '100%' }, borderRadius: 3, overflow: 'hidden' }}>
-              <ZambeziMap route={ROUTE} position={currentPosition} />
+              <ZambeziMap
+                route={ROUTE}
+                position={currentPosition}
+                threatVisible={overlays.showThreats}
+                wetlands={overlays.showWetlands ? wetlandPatches : []}
+                corridor={overlays.showCorridor ? corridorLine : []}
+              />
             </Stack>
           </Grid>
           <Grid item xs={12} md={4.5}>
-            <Sidebar metrics={metrics} telemetryData={telemetryData} />
+            <Sidebar
+              metrics={metrics}
+              telemetryData={telemetryData}
+              overlays={overlays}
+              onToggleOverlays={(next) => setOverlays(next)}
+            />
           </Grid>
         </Grid>
       </Container>

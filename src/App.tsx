@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Box, Container, Grid, Stack } from '@mui/material';
+import { Box, Chip, Drawer, IconButton, Stack, Typography } from '@mui/material';
+import MenuRoundedIcon from '@mui/icons-material/MenuRounded';
 import type { LatLngLiteral } from 'leaflet';
 import Sidebar from './components/Sidebar';
 import ZambeziMap from './components/ZambeziMap';
@@ -127,6 +128,7 @@ function App() {
     showWetlands: true,
     showCorridor: true,
   });
+  const [drawerOpen, setDrawerOpen] = useState(true);
 
   const baseflowContribution = useMemo(
     () => 64 + Math.sin(progress * Math.PI * 2) * 4 + Math.random() * 1.5,
@@ -177,35 +179,88 @@ function App() {
   return (
     <Box
       sx={{
-        minHeight: '100vh',
-        background: 'linear-gradient(180deg, rgba(2,6,23,0.9) 0%, rgba(3,7,18,0.98) 100%)',
+        position: 'relative',
+        height: '100vh',
+        width: '100vw',
+        overflow: 'hidden',
+        backgroundColor: '#020617',
         color: 'text.primary',
-        py: { xs: 2, md: 3 },
       }}
     >
-      <Container maxWidth="xl">
-        <Grid container spacing={2} sx={{ minHeight: { xs: 'auto', md: '90vh' } }}>
-          <Grid item xs={12} md={7.5}>
-            <Stack sx={{ height: { xs: 360, md: '100%' }, borderRadius: 3, overflow: 'hidden' }}>
-              <ZambeziMap
-                route={ROUTE}
-                position={currentPosition}
-                threatVisible={overlays.showThreats}
-                wetlands={overlays.showWetlands ? wetlandPatches : []}
-                corridor={overlays.showCorridor ? corridorLine : []}
-              />
-            </Stack>
-          </Grid>
-          <Grid item xs={12} md={4.5}>
-            <Sidebar
-              metrics={metrics}
-              telemetryData={telemetryData}
-              overlays={overlays}
-              onToggleOverlays={(next) => setOverlays(next)}
-            />
-          </Grid>
-        </Grid>
-      </Container>
+      <Box sx={{ position: 'absolute', inset: 0, zIndex: 0 }}>
+        <ZambeziMap
+          route={ROUTE}
+          position={currentPosition}
+          threatVisible={overlays.showThreats}
+          wetlands={overlays.showWetlands ? wetlandPatches : []}
+          corridor={overlays.showCorridor ? corridorLine : []}
+        />
+      </Box>
+
+      <Stack
+        direction="row"
+        alignItems="center"
+        spacing={1}
+        sx={{
+          position: 'absolute',
+          top: { xs: 12, md: 16 },
+          left: { xs: 12, md: 16 },
+          zIndex: 2,
+          background: 'rgba(3,7,18,0.85)',
+          borderRadius: 999,
+          px: 1,
+          py: 0.5,
+          boxShadow: 6,
+        }}
+      >
+        <IconButton
+          color="primary"
+          size="small"
+          onClick={() => setDrawerOpen((open) => !open)}
+          sx={{ bgcolor: 'rgba(255,255,255,0.06)', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
+        >
+          <MenuRoundedIcon />
+        </IconButton>
+        <Chip label="Zambezi Source Explorer · Demo" color="primary" size="small" sx={{ fontWeight: 700 }} />
+        <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', md: 'block' } }}>
+          Map-first layout with an immersive drawer
+        </Typography>
+      </Stack>
+
+      <Drawer
+        anchor="right"
+        variant="persistent"
+        open={drawerOpen}
+        PaperProps={{
+          sx: {
+            width: { xs: '100%', sm: 420, md: 460 },
+            maxWidth: '100vw',
+            background: 'linear-gradient(180deg, rgba(3,7,18,0.95) 0%, rgba(2,6,23,0.92) 100%)',
+            color: 'text.primary',
+            border: 'none',
+            boxShadow: '-12px 0 24px rgba(0,0,0,0.45)',
+            backdropFilter: 'blur(12px)',
+            display: 'flex',
+            flexDirection: 'column',
+          },
+        }}
+      >
+        <Box
+          sx={{
+            flex: 1,
+            overflowY: 'auto',
+            p: { xs: 2, md: 3 },
+            pb: { xs: 4, md: 6 },
+          }}
+        >
+          <Sidebar
+            metrics={metrics}
+            telemetryData={telemetryData}
+            overlays={overlays}
+            onToggleOverlays={(next) => setOverlays(next)}
+          />
+        </Box>
+      </Drawer>
     </Box>
   );
 }

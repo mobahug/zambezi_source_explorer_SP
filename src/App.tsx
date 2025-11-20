@@ -16,9 +16,10 @@ interface Metrics {
   distanceKm: number;
   heartRate: number;
   ph: number;
-  updateInterval: string;
-  baseflowContribution: number;
-  downstreamPopulation: number;
+  turbidity: number;
+  waterTemp: number;
+  lastUpdated: string;
+  nearestThreatKm: number;
 }
 
 interface OverlayToggles {
@@ -60,6 +61,30 @@ const corridorLine: LatLngLiteral[] = [
   { lat: -12.35, lng: 22.14 },
   { lat: -12.02, lng: 22.98 },
   { lat: -12.14, lng: 23.45 },
+];
+
+interface ThreatMarker {
+  position: LatLngLiteral;
+  label: string;
+  type: 'deforestation' | 'fire' | 'logging';
+}
+
+const threatMarkers: ThreatMarker[] = [
+  {
+    position: { lat: -12.29, lng: 22.36 },
+    label: 'Deforestation hotspot – woodland loss since 2010',
+    type: 'deforestation',
+  },
+  {
+    position: { lat: -12.18, lng: 22.65 },
+    label: 'Fire cluster – increased burn frequency',
+    type: 'fire',
+  },
+  {
+    position: { lat: -12.05, lng: 22.91 },
+    label: 'Logging area – road expansion risk',
+    type: 'logging',
+  },
 ];
 
 function toRad(value: number): number {
@@ -122,6 +147,9 @@ function App() {
   const [distanceKm, setDistanceKm] = useState(0);
   const [heartRate, setHeartRate] = useState(120);
   const [ph, setPh] = useState(7);
+  const [turbidity, setTurbidity] = useState(4.2);
+  const [waterTemp, setWaterTemp] = useState(18.5);
+  const [lastUpdated, setLastUpdated] = useState<string>(new Date().toLocaleTimeString());
   const [currentPosition, setCurrentPosition] = useState<LatLngLiteral>(ROUTE[0]);
   const [telemetryData, setTelemetryData] = useState<TelemetryPoint[]>([]);
   const [overlays, setOverlays] = useState<OverlayToggles>({
@@ -130,16 +158,12 @@ function App() {
     showCorridor: true,
   });
   const [drawerOpen, setDrawerOpen] = useState(true);
+  const [nearestThreatKm, setNearestThreatKm] = useState(0);
 
-  const baseflowContribution = useMemo(
-    () => 64 + Math.sin(progress * Math.PI * 2) * 4 + Math.random() * 1.5,
-    [progress],
-  );
-
-  const downstreamPopulation = useMemo(
-    () => 24000000 + Math.sin(timeTick / 8) * 100000,
-    [timeTick],
-  );
+  function nearestThreatDistanceKm(position: LatLngLiteral) {
+    const distances = threatMarkers.map((marker) => haversineDistance(position, marker.position));
+    return distances.length ? Math.min(...distances) : 0;
+  }
 
   useEffect(() => {
     const id = window.setInterval(() => {
@@ -157,11 +181,17 @@ function App() {
     const position = interpolatePosition(ROUTE, cumulative, targetDistance);
     const hr = 120 + Math.sin(timeTick / 3) * 10 + (Math.random() * 8 - 4);
     const phValue = 7 + Math.sin(timeTick / 5) * 0.35 + (Math.random() * 0.1 - 0.05);
+    const turbidityValue = Math.max(0.8, 3.5 + Math.sin(timeTick / 4) * 0.8 + (Math.random() * 0.6 - 0.3));
+    const waterTempValue = 18.5 + Math.sin(timeTick / 6) * 1.8 + (Math.random() * 0.4 - 0.2);
 
     setCurrentPosition(position);
     setDistanceKm(Number(targetDistance.toFixed(1)));
     setHeartRate(Math.round(hr));
     setPh(Number(phValue.toFixed(2)));
+    setTurbidity(Number(turbidityValue.toFixed(2)));
+    setWaterTemp(Number(waterTempValue.toFixed(1)));
+    setLastUpdated(new Date().toLocaleTimeString());
+    setNearestThreatKm(Number(nearestThreatDistanceKm(position).toFixed(1)));
     setTelemetryData((prev) => {
       const next = [...prev, { time: timeTick, hr: Math.round(hr), ph: Number(phValue.toFixed(2)) }];
       return next.slice(-30);
@@ -172,9 +202,10 @@ function App() {
     distanceKm,
     heartRate,
     ph,
-    updateInterval: `${UPDATE_INTERVAL_MS / 1000} seconds`,
-    baseflowContribution: Number(baseflowContribution.toFixed(1)),
-    downstreamPopulation: Math.round(downstreamPopulation),
+    turbidity,
+    waterTemp,
+    lastUpdated,
+    nearestThreatKm,
   };
 
   return (
@@ -261,6 +292,11 @@ function App() {
             telemetryData={telemetryData}
             overlays={overlays}
             onToggleOverlays={(next) => setOverlays(next)}
+            alerts={threatMarkers.map((marker, idx) => ({
+              ...marker,
+              distanceKm: Number(haversineDistance(currentPosition, marker.position).toFixed(1)),
+              timeAgo: `${5 + idx * 3} min ago`,
+            }))}
           />
         </Box>
       </Drawer>

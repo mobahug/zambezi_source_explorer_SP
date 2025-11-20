@@ -1,7 +1,6 @@
 import {
   Box,
   Card,
-  CardContent,
   Chip,
   Divider,
   Grid,
@@ -13,16 +12,16 @@ import {
   Stack,
   Switch,
   Typography,
-} from "@mui/material";
-import WaterDropIcon from "@mui/icons-material/WaterDrop";
-import ForestIcon from "@mui/icons-material/Forest";
-import PublicIcon from "@mui/icons-material/Public";
-import VerifiedIcon from "@mui/icons-material/Verified";
-import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-import MapIcon from "@mui/icons-material/Map";
-import InsightsIcon from "@mui/icons-material/Insights";
-import MetricCard from "./MetricCard";
-import TelemetryChart from "./TelemetryChart";
+} from '@mui/material';
+import WaterDropIcon from '@mui/icons-material/WaterDrop';
+import ForestIcon from '@mui/icons-material/Forest';
+import PublicIcon from '@mui/icons-material/Public';
+import VerifiedIcon from '@mui/icons-material/Verified';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import MapIcon from '@mui/icons-material/Map';
+import InsightsIcon from '@mui/icons-material/Insights';
+import MetricCard from './MetricCard';
+import TelemetryChart from './TelemetryChart';
 
 interface TelemetryPoint {
   time: number;
@@ -34,9 +33,10 @@ interface Metrics {
   distanceKm: number;
   heartRate: number;
   ph: number;
-  updateInterval: string;
-  baseflowContribution: number;
-  downstreamPopulation: number;
+  turbidity: number;
+  waterTemp: number;
+  lastUpdated: string;
+  nearestThreatKm: number;
 }
 
 interface SidebarProps {
@@ -52,6 +52,13 @@ interface SidebarProps {
     showWetlands: boolean;
     showCorridor: boolean;
   }) => void;
+  alerts: {
+    position: { lat: number; lng: number };
+    label: string;
+    type: 'deforestation' | 'fire' | 'logging';
+    distanceKm: number;
+    timeAgo: string;
+  }[];
 }
 
 const Sidebar = ({
@@ -59,23 +66,31 @@ const Sidebar = ({
   telemetryData,
   overlays,
   onToggleOverlays,
+  alerts,
 }: SidebarProps) => (
   <Stack spacing={2}>
     <Card sx={{ p: 3 }}>
       <Stack spacing={1}>
-        <Chip
-          label="● Zambezi Source Explorer · Demo"
-          size="small"
-          color="primary"
-          sx={{ alignSelf: "flex-start", fontWeight: 700 }}
-        />
+        <Stack direction="row" spacing={1} alignItems="center">
+          <Chip
+            label="● Zambezi Source Explorer · Demo"
+            size="small"
+            color="primary"
+            sx={{ alignSelf: 'flex-start', fontWeight: 700 }}
+          />
+          <Chip
+            label={`Updated ${metrics.lastUpdated}`}
+            size="small"
+            color="secondary"
+            sx={{ alignSelf: 'flex-start', bgcolor: 'rgba(34,197,94,0.15)', color: '#bbf7d0' }}
+          />
+        </Stack>
         <Typography variant="h4" fontWeight={800} gutterBottom>
           The Source of the Zambezi
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          This demo simulates a river expedition from the Angolan Highlands,
-          showing how live expedition data and threats can be visualized to
-          support decisions about protecting the Zambezi's source.
+          Live mock expedition feed from the Angolan Highlands. Toggle threats and wetlands to show
+          what a real-time protection briefing could look like.
         </Typography>
       </Stack>
     </Card>
@@ -104,21 +119,27 @@ const Sidebar = ({
           />
         </Grid>
         <Grid item xs={6}>
-          <MetricCard label="Update interval" value={metrics.updateInterval} />
+          <MetricCard label="Water pH" value={metrics.ph.toFixed(2)} accent="primary" />
         </Grid>
         <Grid item xs={6}>
           <MetricCard
-            label="Baseflow contribution"
-            value={`${metrics.baseflowContribution}%`}
+            label="Water turbidity"
+            value={`${metrics.turbidity.toFixed(1)} NTU`}
             accent="secondary"
           />
         </Grid>
         <Grid item xs={6}>
           <MetricCard
-            label="Downstream reach"
-            value={`${(metrics.downstreamPopulation / 1_000_000).toFixed(
-              1
-            )} M people`}
+            label="Water temperature"
+            value={`${metrics.waterTemp.toFixed(1)} °C`}
+            accent="primary"
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <MetricCard
+            label="Nearest alert"
+            value={`${metrics.nearestThreatKm.toFixed(1)} km away`}
+            accent="secondary"
           />
         </Grid>
       </Grid>
@@ -243,33 +264,22 @@ const Sidebar = ({
         <InsightsIcon color="secondary" />
       </Stack>
       <List dense disablePadding>
-        {[
-          {
-            title: "Source confirmed in Angolan Highlands",
-            detail:
-              "Geo-referenced springs and peat domes mapped for Ramsar nomination",
-            icon: <VerifiedIcon color="primary" />,
-          },
-          {
-            title: "Active fire edge spotted",
-            detail: "Thermal hotspot north of route; buffer recommended",
-            icon: <WarningAmberIcon color="secondary" />,
-          },
-          {
-            title: "Water chemistry stable",
-            detail: "pH holding near 7.0 with low turbidity",
-            icon: <WaterDropIcon color="primary" />,
-          },
-        ].map(item => (
-          <ListItem key={item.title} disableGutters sx={{ pb: 1 }}>
-            <ListItemAvatar>{item.icon}</ListItemAvatar>
+        {alerts.map((item) => (
+          <ListItem key={item.label} disableGutters sx={{ pb: 1 }}>
+            <ListItemAvatar>
+              {item.type === 'fire' ? (
+                <WarningAmberIcon color="secondary" />
+              ) : item.type === 'deforestation' ? (
+                <ForestIcon color="primary" />
+              ) : (
+                <MapIcon color="primary" />
+              )}
+            </ListItemAvatar>
             <ListItemText
-              primary={
-                <Typography variant="subtitle2">{item.title}</Typography>
-              }
+              primary={<Typography variant="subtitle2">{item.label}</Typography>}
               secondary={
                 <Typography variant="caption" color="text.secondary">
-                  {item.detail}
+                  {item.timeAgo} · {item.distanceKm.toFixed(1)} km away
                 </Typography>
               }
             />

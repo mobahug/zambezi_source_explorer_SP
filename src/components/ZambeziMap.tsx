@@ -1,6 +1,14 @@
-import { MapContainer, TileLayer, Polyline, Marker, Popup, CircleMarker, Polygon } from 'react-leaflet';
-import L, { LatLngExpression, LatLngLiteral } from 'leaflet';
-import { useMemo } from 'react';
+import {
+  MapContainer,
+  TileLayer,
+  Polyline,
+  Marker,
+  Popup,
+  CircleMarker,
+  Polygon,
+} from "react-leaflet";
+import L, { LatLngExpression, LatLngLiteral } from "leaflet";
+import { useMemo } from "react";
 
 interface ZambeziMapProps {
   route: LatLngLiteral[];
@@ -8,7 +16,12 @@ interface ZambeziMapProps {
   threatVisible: boolean;
   wetlands: LatLngLiteral[][];
   corridor: LatLngLiteral[];
-  logMarkers?: { id: string; position: LatLngLiteral; icon: 'note' | 'observation' | 'alert'; title: string }[];
+  logMarkers?: {
+    id: string;
+    position: LatLngLiteral;
+    icon: "note" | "observation" | "alert";
+    title: string;
+  }[];
   showLogs?: boolean;
 }
 
@@ -20,44 +33,61 @@ interface ThreatMarker {
 const threatMarkers: ThreatMarker[] = [
   {
     position: { lat: -12.29, lng: 22.36 },
-    label: 'Deforestation hotspot – woodland loss since 2010',
+    label: "Deforestation hotspot – woodland loss since 2010",
   },
   {
     position: { lat: -12.18, lng: 22.65 },
-    label: 'Fire cluster – increased burn frequency',
+    label: "Fire cluster – increased burn frequency",
   },
   {
     position: { lat: -12.05, lng: 22.91 },
-    label: 'Logging area – road expansion risk',
+    label: "Logging area – road expansion risk",
   },
 ];
 
 const baseCenter: LatLngExpression = [-12.2, 22.6];
 
 const defaultIcon = L.icon({
-  iconUrl: new URL('leaflet/dist/images/marker-icon.png', import.meta.url).toString(),
-  iconRetinaUrl: new URL('leaflet/dist/images/marker-icon-2x.png', import.meta.url).toString(),
-  shadowUrl: new URL('leaflet/dist/images/marker-shadow.png', import.meta.url).toString(),
+  iconUrl: new URL(
+    "leaflet/dist/images/marker-icon.png",
+    import.meta.url,
+  ).toString(),
+  iconRetinaUrl: new URL(
+    "leaflet/dist/images/marker-icon-2x.png",
+    import.meta.url,
+  ).toString(),
+  shadowUrl: new URL(
+    "leaflet/dist/images/marker-shadow.png",
+    import.meta.url,
+  ).toString(),
   iconSize: [25, 41],
   iconAnchor: [12, 41],
 });
 L.Marker.prototype.options.icon = defaultIcon;
 
 const expeditionIcon = L.divIcon({
-  className: 'expedition-marker',
+  className: "expedition-marker",
   html: '<div class="pulse"></div>',
   iconSize: [16, 16],
   iconAnchor: [8, 8],
 });
 
 const threatIcon = L.divIcon({
-  className: '',
+  className: "",
   html: '<div class="threat-marker"></div>',
   iconSize: [18, 18],
   iconAnchor: [9, 9],
 });
 
-const ZambeziMap = ({ route, position, threatVisible, wetlands, corridor, logMarkers = [], showLogs = true }: ZambeziMapProps) => {
+const ZambeziMap = ({
+  route,
+  position,
+  threatVisible,
+  wetlands,
+  corridor,
+  logMarkers = [],
+  showLogs = true,
+}: ZambeziMapProps) => {
   const bounds = useMemo(() => L.latLngBounds(route), [route]);
 
   return (
@@ -66,22 +96,37 @@ const ZambeziMap = ({ route, position, threatVisible, wetlands, corridor, logMar
       zoom={8}
       scrollWheelZoom
       bounds={bounds}
-      style={{ width: '100%', height: '100%' }}
+      style={{ width: "100%", height: "100%" }}
     >
       <TileLayer
         attribution="&copy; OpenStreetMap contributors &copy; CARTO"
         url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
       />
       <Polyline positions={route} color="#14b8a6" weight={4} opacity={0.9} />
-      <CircleMarker center={route[0]} radius={6} color="#22c55e" fillOpacity={0.8} />
-      <CircleMarker center={route[route.length - 1]} radius={6} color="#f97316" fillOpacity={0.8} />
+      <CircleMarker
+        center={route[0]}
+        radius={6}
+        color="#22c55e"
+        fillOpacity={0.8}
+      />
+      <CircleMarker
+        center={route[route.length - 1]}
+        radius={6}
+        color="#f97316"
+        fillOpacity={0.8}
+      />
 
       <Marker position={position} icon={expeditionIcon} />
 
       {wetlands.map((patch, idx) => (
         <Polygon
           key={`wetland-${idx}`}
-          pathOptions={{ color: '#22c55e', fillColor: '#22c55e', weight: 1, fillOpacity: 0.18 }}
+          pathOptions={{
+            color: "#22c55e",
+            fillColor: "#22c55e",
+            weight: 1,
+            fillOpacity: 0.18,
+          }}
           positions={patch}
         />
       ))}
@@ -98,7 +143,11 @@ const ZambeziMap = ({ route, position, threatVisible, wetlands, corridor, logMar
 
       {threatVisible &&
         threatMarkers.map((marker) => (
-          <Marker key={`${marker.position.lat}-${marker.position.lng}`} position={marker.position} icon={threatIcon}>
+          <Marker
+            key={`${marker.position.lat}-${marker.position.lng}`}
+            position={marker.position}
+            icon={threatIcon}
+          >
             <Popup>
               <strong>{marker.label}</strong>
               <br />
@@ -112,9 +161,13 @@ const ZambeziMap = ({ route, position, threatVisible, wetlands, corridor, logMar
             key={log.id}
             position={log.position}
             icon={L.divIcon({
-              className: '',
+              className: "",
               html: `<div style="width:14px;height:14px;border-radius:50%;background:${
-                log.icon === 'alert' ? '#f97316' : log.icon === 'observation' ? '#22c55e' : '#38bdf8'
+                log.icon === "alert"
+                  ? "#f97316"
+                  : log.icon === "observation"
+                    ? "#22c55e"
+                    : "#38bdf8"
               };border:2px solid rgba(2,6,23,0.9);box-shadow:0 0 6px rgba(0,0,0,0.35)"></div>`,
               iconSize: [14, 14],
               iconAnchor: [7, 7],

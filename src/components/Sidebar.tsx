@@ -12,17 +12,17 @@ import {
   Stack,
   Switch,
   Typography,
-} from '@mui/material';
-import WaterDropIcon from '@mui/icons-material/WaterDrop';
-import ForestIcon from '@mui/icons-material/Forest';
-import PublicIcon from '@mui/icons-material/Public';
-import VerifiedIcon from '@mui/icons-material/Verified';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import MapIcon from '@mui/icons-material/Map';
-import InsightsIcon from '@mui/icons-material/Insights';
-import NoteAddIcon from '@mui/icons-material/NoteAdd';
-import MetricCard from './MetricCard';
-import TelemetryChart from './TelemetryChart';
+} from "@mui/material";
+import WaterDropIcon from "@mui/icons-material/WaterDrop";
+import ForestIcon from "@mui/icons-material/Forest";
+import PublicIcon from "@mui/icons-material/Public";
+import VerifiedIcon from "@mui/icons-material/Verified";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import MapIcon from "@mui/icons-material/Map";
+import InsightsIcon from "@mui/icons-material/Insights";
+import NoteAddIcon from "@mui/icons-material/NoteAdd";
+import MetricCard from "./MetricCard";
+import TelemetryChart from "./TelemetryChart";
 
 interface TelemetryPoint {
   time: number;
@@ -58,7 +58,7 @@ interface SidebarProps {
   alerts: {
     position: { lat: number; lng: number };
     label: string;
-    type: 'deforestation' | 'fire' | 'logging';
+    type: "deforestation" | "fire" | "logging";
     distanceKm: number;
     timeAgo: string;
   }[];
@@ -66,7 +66,7 @@ interface SidebarProps {
     id: string;
     title: string;
     body: string;
-    icon: 'note' | 'observation' | 'alert';
+    icon: "note" | "observation" | "alert";
     createdAt: number;
   }[];
   onAddLog: () => void;
@@ -76,7 +76,7 @@ interface SidebarProps {
 function timeAgo(timestamp: number) {
   const diff = Date.now() - timestamp;
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'just now';
+  if (mins < 1) return "just now";
   if (mins < 60) return `${mins} min ago`;
   const hours = Math.floor(mins / 60);
   if (hours < 24) return `${hours} hr ago`;
@@ -102,21 +102,26 @@ const Sidebar = ({
             label="● Zambezi Source Explorer · Demo"
             size="small"
             color="primary"
-            sx={{ alignSelf: 'flex-start', fontWeight: 700 }}
+            sx={{ alignSelf: "flex-start", fontWeight: 700 }}
           />
           <Chip
             label={`Updated ${metrics.lastUpdated}`}
             size="small"
             color="secondary"
-            sx={{ alignSelf: 'flex-start', bgcolor: 'rgba(34,197,94,0.15)', color: '#bbf7d0' }}
+            sx={{
+              alignSelf: "flex-start",
+              bgcolor: "rgba(34,197,94,0.15)",
+              color: "#bbf7d0",
+            }}
           />
         </Stack>
         <Typography variant="h4" fontWeight={800} gutterBottom>
           The Source of the Zambezi
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Live mock expedition feed from the Angolan Highlands. Toggle threats and wetlands to show
-          what a real-time protection briefing could look like.
+          Live mock expedition feed from the Angolan Highlands. Toggle threats
+          and wetlands to show what a real-time protection briefing could look
+          like.
         </Typography>
       </Stack>
     </Card>
@@ -145,7 +150,11 @@ const Sidebar = ({
           />
         </Grid>
         <Grid item xs={6}>
-          <MetricCard label="Water pH" value={metrics.ph.toFixed(2)} accent="primary" />
+          <MetricCard
+            label="Water pH"
+            value={metrics.ph.toFixed(2)}
+            accent="primary"
+          />
         </Grid>
         <Grid item xs={6}>
           <MetricCard
@@ -207,7 +216,7 @@ const Sidebar = ({
           <Switch
             color="secondary"
             checked={overlays.showThreats}
-            onChange={e =>
+            onChange={(e) =>
               onToggleOverlays({ ...overlays, showThreats: e.target.checked })
             }
           />
@@ -226,7 +235,7 @@ const Sidebar = ({
           <Switch
             color="primary"
             checked={overlays.showWetlands}
-            onChange={e =>
+            onChange={(e) =>
               onToggleOverlays({ ...overlays, showWetlands: e.target.checked })
             }
           />
@@ -245,7 +254,7 @@ const Sidebar = ({
           <Switch
             color="secondary"
             checked={overlays.showCorridor}
-            onChange={e =>
+            onChange={(e) =>
               onToggleOverlays({ ...overlays, showCorridor: e.target.checked })
             }
           />
@@ -264,7 +273,7 @@ const Sidebar = ({
           <Switch
             color="primary"
             checked={overlays.showLogs}
-            onChange={e =>
+            onChange={(e) =>
               onToggleOverlays({ ...overlays, showLogs: e.target.checked })
             }
           />
@@ -317,26 +326,34 @@ const Sidebar = ({
           .slice()
           .sort((a, b) => b.createdAt - a.createdAt)
           .map((item) => (
-          <ListItem button key={item.id} disableGutters sx={{ pb: 1 }} onClick={() => onSelectLog(item.id)}>
-            <ListItemAvatar>
-              {item.icon === 'alert' ? (
-                <WarningAmberIcon color="secondary" />
-              ) : item.icon === 'observation' ? (
-                <ForestIcon color="primary" />
-              ) : (
-                <WaterDropIcon color="primary" />
-              )}
-            </ListItemAvatar>
-            <ListItemText
-              primary={<Typography variant="subtitle2">{item.title}</Typography>}
-              secondary={
-                <Typography variant="caption" color="text.secondary">
-                  {timeAgo(item.createdAt)}
-                </Typography>
-              }
-            />
-          </ListItem>
-        ))}
+            <ListItem
+              button
+              key={item.id}
+              disableGutters
+              sx={{ pb: 1 }}
+              onClick={() => onSelectLog(item.id)}
+            >
+              <ListItemAvatar>
+                {item.icon === "alert" ? (
+                  <WarningAmberIcon color="secondary" />
+                ) : item.icon === "observation" ? (
+                  <ForestIcon color="primary" />
+                ) : (
+                  <WaterDropIcon color="primary" />
+                )}
+              </ListItemAvatar>
+              <ListItemText
+                primary={
+                  <Typography variant="subtitle2">{item.title}</Typography>
+                }
+                secondary={
+                  <Typography variant="caption" color="text.secondary">
+                    {timeAgo(item.createdAt)}
+                  </Typography>
+                }
+              />
+            </ListItem>
+          ))}
       </List>
     </Card>
   </Stack>

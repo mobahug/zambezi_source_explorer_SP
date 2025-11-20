@@ -8,6 +8,8 @@ interface ZambeziMapProps {
   threatVisible: boolean;
   wetlands: LatLngLiteral[][];
   corridor: LatLngLiteral[];
+  logMarkers?: { id: string; position: LatLngLiteral; icon: 'note' | 'observation' | 'alert'; title: string }[];
+  showLogs?: boolean;
 }
 
 interface ThreatMarker {
@@ -55,7 +57,7 @@ const threatIcon = L.divIcon({
   iconAnchor: [9, 9],
 });
 
-const ZambeziMap = ({ route, position, threatVisible, wetlands, corridor }: ZambeziMapProps) => {
+const ZambeziMap = ({ route, position, threatVisible, wetlands, corridor, logMarkers = [], showLogs = true }: ZambeziMapProps) => {
   const bounds = useMemo(() => L.latLngBounds(route), [route]);
 
   return (
@@ -101,6 +103,27 @@ const ZambeziMap = ({ route, position, threatVisible, wetlands, corridor }: Zamb
               <strong>{marker.label}</strong>
               <br />
               Simulated alert near the Zambezi source.
+            </Popup>
+          </Marker>
+        ))}
+      {showLogs &&
+        logMarkers.map((log) => (
+          <Marker
+            key={log.id}
+            position={log.position}
+            icon={L.divIcon({
+              className: '',
+              html: `<div style="width:14px;height:14px;border-radius:50%;background:${
+                log.icon === 'alert' ? '#f97316' : log.icon === 'observation' ? '#22c55e' : '#38bdf8'
+              };border:2px solid rgba(2,6,23,0.9);box-shadow:0 0 6px rgba(0,0,0,0.35)"></div>`,
+              iconSize: [14, 14],
+              iconAnchor: [7, 7],
+            })}
+          >
+            <Popup>
+              <strong>{log.title}</strong>
+              <br />
+              Expedition note
             </Popup>
           </Marker>
         ))}

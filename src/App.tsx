@@ -1,7 +1,24 @@
 import { useEffect, useMemo, useState } from 'react';
-import { AppBar, Box, Chip, Drawer, IconButton, Stack, Toolbar, Typography } from '@mui/material';
+import {
+  AppBar,
+  Box,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Drawer,
+  IconButton,
+  Stack,
+  TextField,
+  Toolbar,
+  Typography,
+  Button,
+} from '@mui/material';
 import MenuRoundedIcon from '@mui/icons-material/MenuRounded';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import NoteAddIcon from '@mui/icons-material/NoteAdd';
+import RoomIcon from '@mui/icons-material/Room';
 import type { LatLngLiteral } from 'leaflet';
 import Sidebar from './components/Sidebar';
 import ZambeziMap from './components/ZambeziMap';
@@ -22,10 +39,22 @@ interface Metrics {
   nearestThreatKm: number;
 }
 
+type ExpeditionIcon = 'note' | 'observation' | 'alert';
+
+interface ExpeditionLog {
+  id: string;
+  title: string;
+  body: string;
+  icon: ExpeditionIcon;
+  createdAt: number;
+  position: LatLngLiteral;
+}
+
 interface OverlayToggles {
   showThreats: boolean;
   showWetlands: boolean;
   showCorridor: boolean;
+  showLogs: boolean;
 }
 
 const ROUTE: LatLngLiteral[] = [
@@ -156,14 +185,35 @@ function App() {
     showThreats: true,
     showWetlands: true,
     showCorridor: true,
+    showLogs: true,
   });
   const [drawerOpen, setDrawerOpen] = useState(true);
   const [nearestThreatKm, setNearestThreatKm] = useState(0);
+  const [logs, setLogs] = useState<ExpeditionLog[]>([]);
+  const [logModalOpen, setLogModalOpen] = useState(false);
+  const [viewLog, setViewLog] = useState<ExpeditionLog | null>(null);
+  const [logForm, setLogForm] = useState({ title: '', body: '', icon: 'note' as ExpeditionIcon });
 
   function nearestThreatDistanceKm(position: LatLngLiteral) {
     const distances = threatMarkers.map((marker) => haversineDistance(position, marker.position));
     return distances.length ? Math.min(...distances) : 0;
   }
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem('zambezi-expedition-logs');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as ExpeditionLog[];
+        setLogs(parsed);
+      } catch (err) {
+        console.error('Failed to parse stored logs', err);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem('zambezi-expedition-logs', JSON.stringify(logs));
+  }, [logs]);
 
   useEffect(() => {
     const id = window.setInterval(() => {
@@ -206,6 +256,32 @@ function App() {
     waterTemp,
     lastUpdated,
     nearestThreatKm,
+  };
+
+  const iconOptions: { value: ExpeditionIcon; label: string }[] = [
+    { value: 'note', label: 'General note' },
+    { value: 'observation', label: 'Observation' },
+    { value: 'alert', label: 'Alert' },
+  ];
+
+  const handleSaveLog = () => {
+    if (!logForm.title.trim()) return;
+    const newLog: ExpeditionLog = {
+      id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}`,
+      title: logForm.title.trim(),
+      body: logForm.body.trim(),
+      icon: logForm.icon,
+      createdAt: Date.now(),
+      position: currentPosition,
+    };
+    setLogs((prev) => [newLog, ...prev]);
+    setLogForm({ title: '', body: '', icon: 'note' });
+    setLogModalOpen(false);
+  };
+
+  const handleSelectLog = (logId: string) => {
+    const found = logs.find((l) => l.id === logId);
+    if (found) setViewLog(found);
   };
 
   return (
@@ -253,6 +329,8 @@ function App() {
           threatVisible={overlays.showThreats}
           wetlands={overlays.showWetlands ? wetlandPatches : []}
           corridor={overlays.showCorridor ? corridorLine : []}
+          logMarkers={logs}
+          showLogs={overlays.showLogs}
         />
       </Box>
 
@@ -297,9 +375,92 @@ function App() {
               distanceKm: Number(haversineDistance(currentPosition, marker.position).toFixed(1)),
               timeAgo: `${5 + idx * 3} min ago`,
             }))}
+            logs={logs}
+            onAddLog={() => setLogModalOpen(true)}
+            onSelectLog={handleSelectLog}
           />
         </Box>
       </Drawer>
+
+      <Box
+        sx={{
+          position: 'absolute',
+          bottom: { xs: 16, md: 20 },
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 2,
+          display: 'flex',
+          gap: 1,
+          bgcolor: 'rgba(3,7,18,0.85)',
+          borderRadius: 999,
+          px: 1.25,
+          py: 0.5,
+          boxShadow: '0 12px 28px rgba(0,0,0,0.45)',
+        }}
+      >
+        <IconButton color="primary" onClick={() => setLogModalOpen(true)}>
+          <NoteAddIcon />
+        </IconButton>
+        <IconButton
+          color={overlays.showLogs ? 'primary' : 'default'}
+          onClick={() => setOverlays({ ...overlays, showLogs: !overlays.showLogs })}
+        >
+          <RoomIcon />
+        </IconButton>
+      </Box>
+
+      <Dialog open={logModalOpen} onClose={() => setLogModalOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Add expedition log</DialogTitle>
+        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+          <Stack direction="row" spacing={1}>
+            {iconOptions.map((opt) => (
+              <Chip
+                key={opt.value}
+                label={opt.label}
+                color={logForm.icon === opt.value ? 'primary' : 'default'}
+                onClick={() => setLogForm((f) => ({ ...f, icon: opt.value }))}
+                sx={{ fontWeight: logForm.icon === opt.value ? 700 : 500 }}
+              />
+            ))}
+          </Stack>
+          <TextField
+            label="Title"
+            value={logForm.title}
+            onChange={(e) => setLogForm((f) => ({ ...f, title: e.target.value }))}
+            fullWidth
+          />
+          <TextField
+            label="Details"
+            value={logForm.body}
+            onChange={(e) => setLogForm((f) => ({ ...f, body: e.target.value }))}
+            fullWidth
+            multiline
+            minRows={3}
+          />
+          <Typography variant="caption" color="text.secondary">
+            Log will pin to your current position along the route.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setLogModalOpen(false)}>Cancel</Button>
+          <Button onClick={handleSaveLog} variant="contained" disabled={!logForm.title.trim()}>
+            Save log
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={!!viewLog} onClose={() => setViewLog(null)} maxWidth="sm" fullWidth>
+        <DialogTitle>{viewLog?.title}</DialogTitle>
+        <DialogContent sx={{ whiteSpace: 'pre-line' }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            {viewLog ? new Date(viewLog.createdAt).toLocaleString() : ''}
+          </Typography>
+          <Typography variant="body1">{viewLog?.body || 'No details provided.'}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setViewLog(null)}>Close</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

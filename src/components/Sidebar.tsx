@@ -20,6 +20,7 @@ import VerifiedIcon from '@mui/icons-material/Verified';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import MapIcon from '@mui/icons-material/Map';
 import InsightsIcon from '@mui/icons-material/Insights';
+import NoteAddIcon from '@mui/icons-material/NoteAdd';
 import MetricCard from './MetricCard';
 import TelemetryChart from './TelemetryChart';
 
@@ -46,11 +47,13 @@ interface SidebarProps {
     showThreats: boolean;
     showWetlands: boolean;
     showCorridor: boolean;
+    showLogs: boolean;
   };
   onToggleOverlays: (next: {
     showThreats: boolean;
     showWetlands: boolean;
     showCorridor: boolean;
+    showLogs: boolean;
   }) => void;
   alerts: {
     position: { lat: number; lng: number };
@@ -59,6 +62,26 @@ interface SidebarProps {
     distanceKm: number;
     timeAgo: string;
   }[];
+  logs: {
+    id: string;
+    title: string;
+    body: string;
+    icon: 'note' | 'observation' | 'alert';
+    createdAt: number;
+  }[];
+  onAddLog: () => void;
+  onSelectLog: (logId: string) => void;
+}
+
+function timeAgo(timestamp: number) {
+  const diff = Date.now() - timestamp;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins} min ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} hr ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} d ago`;
 }
 
 const Sidebar = ({
@@ -67,6 +90,9 @@ const Sidebar = ({
   overlays,
   onToggleOverlays,
   alerts,
+  logs,
+  onAddLog,
+  onSelectLog,
 }: SidebarProps) => (
   <Stack spacing={2}>
     <Card sx={{ p: 3 }}>
@@ -224,6 +250,25 @@ const Sidebar = ({
             }
           />
         </Stack>
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <Box>
+            <Typography variant="subtitle2">Expedition pins</Typography>
+            <Typography variant="caption" color="text.secondary">
+              Field notes shown on the map
+            </Typography>
+          </Box>
+          <Switch
+            color="primary"
+            checked={overlays.showLogs}
+            onChange={e =>
+              onToggleOverlays({ ...overlays, showLogs: e.target.checked })
+            }
+          />
+        </Stack>
       </Stack>
     </Card>
 
@@ -262,24 +307,31 @@ const Sidebar = ({
       <Stack direction="row" alignItems="center" spacing={1} mb={1}>
         <Typography variant="h6">Expedition log</Typography>
         <InsightsIcon color="secondary" />
+        <Box sx={{ flexGrow: 1 }} />
+        <IconButton size="small" color="primary" onClick={onAddLog}>
+          <NoteAddIcon fontSize="small" />
+        </IconButton>
       </Stack>
       <List dense disablePadding>
-        {alerts.map((item) => (
-          <ListItem key={item.label} disableGutters sx={{ pb: 1 }}>
+        {logs
+          .slice()
+          .sort((a, b) => b.createdAt - a.createdAt)
+          .map((item) => (
+          <ListItem button key={item.id} disableGutters sx={{ pb: 1 }} onClick={() => onSelectLog(item.id)}>
             <ListItemAvatar>
-              {item.type === 'fire' ? (
+              {item.icon === 'alert' ? (
                 <WarningAmberIcon color="secondary" />
-              ) : item.type === 'deforestation' ? (
+              ) : item.icon === 'observation' ? (
                 <ForestIcon color="primary" />
               ) : (
-                <MapIcon color="primary" />
+                <WaterDropIcon color="primary" />
               )}
             </ListItemAvatar>
             <ListItemText
-              primary={<Typography variant="subtitle2">{item.label}</Typography>}
+              primary={<Typography variant="subtitle2">{item.title}</Typography>}
               secondary={
                 <Typography variant="caption" color="text.secondary">
-                  {item.timeAgo} · {item.distanceKm.toFixed(1)} km away
+                  {timeAgo(item.createdAt)}
                 </Typography>
               }
             />

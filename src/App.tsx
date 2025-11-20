@@ -240,10 +240,19 @@ function App() {
             border: 'none',
             boxShadow: '-12px 0 24px rgba(0,0,0,0.45)',
             backdropFilter: 'blur(12px)',
+            display: 'flex',
+            flexDirection: 'column',
           },
         }}
       >
-        <Box sx={{ height: '100%', overflowY: 'auto', p: { xs: 2, md: 3 } }}>
+        <Box
+          sx={{
+            flex: 1,
+            overflowY: 'auto',
+            p: { xs: 2, md: 3 },
+            pb: { xs: 4, md: 6 },
+          }}
+        >
           <Sidebar
             metrics={metrics}
             telemetryData={telemetryData}

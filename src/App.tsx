@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Box, Chip, Drawer, IconButton, Stack, Typography } from '@mui/material';
+import { AppBar, Box, Chip, Drawer, IconButton, Stack, Toolbar, Typography } from '@mui/material';
 import MenuRoundedIcon from '@mui/icons-material/MenuRounded';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import type { LatLngLiteral } from 'leaflet';
 import Sidebar from './components/Sidebar';
 import ZambeziMap from './components/ZambeziMap';
@@ -187,6 +188,33 @@ function App() {
         color: 'text.primary',
       }}
     >
+      <AppBar
+        position="fixed"
+        elevation={0}
+        sx={{
+          background: 'rgba(3,7,18,0.9)',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          backdropFilter: 'blur(10px)',
+        }}
+      >
+        <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', gap: 2 }}>
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            <Chip label="Zambezi Source Explorer · Demo" color="primary" size="small" sx={{ fontWeight: 700 }} />
+            <Typography variant="h6" fontWeight={800} sx={{ display: { xs: 'none', sm: 'block' } }}>
+              The Source of the Zambezi
+            </Typography>
+          </Stack>
+          <IconButton
+            color="inherit"
+            edge="end"
+            onClick={() => setDrawerOpen(true)}
+            sx={{ display: drawerOpen ? 'none' : 'inline-flex' }}
+          >
+            <MenuRoundedIcon />
+          </IconButton>
+        </Toolbar>
+      </AppBar>
+
       <Box sx={{ position: 'absolute', inset: 0, zIndex: 0 }}>
         <ZambeziMap
           route={ROUTE}
@@ -196,36 +224,6 @@ function App() {
           corridor={overlays.showCorridor ? corridorLine : []}
         />
       </Box>
-
-      <Stack
-        direction="row"
-        alignItems="center"
-        spacing={1}
-        sx={{
-          position: 'absolute',
-          top: { xs: 12, md: 16 },
-          left: { xs: 12, md: 16 },
-          zIndex: 2,
-          background: 'rgba(3,7,18,0.85)',
-          borderRadius: 999,
-          px: 1,
-          py: 0.5,
-          boxShadow: 6,
-        }}
-      >
-        <IconButton
-          color="primary"
-          size="small"
-          onClick={() => setDrawerOpen((open) => !open)}
-          sx={{ bgcolor: 'rgba(255,255,255,0.06)', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
-        >
-          <MenuRoundedIcon />
-        </IconButton>
-        <Chip label="Zambezi Source Explorer · Demo" color="primary" size="small" sx={{ fontWeight: 700 }} />
-        <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', md: 'block' } }}>
-          Map-first layout with an immersive drawer
-        </Typography>
-      </Stack>
 
       <Drawer
         anchor="right"
@@ -245,6 +243,11 @@ function App() {
           },
         }}
       >
+        <Toolbar sx={{ justifyContent: 'flex-end', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <IconButton color="inherit" onClick={() => setDrawerOpen(false)}>
+            <ChevronRightIcon />
+          </IconButton>
+        </Toolbar>
         <Box
           sx={{
             flex: 1,

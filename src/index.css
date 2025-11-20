@@ -1,0 +1,69 @@
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: radial-gradient(circle at 20% 20%, rgba(20, 184, 166, 0.1), transparent 25%),
+    radial-gradient(circle at 80% 10%, rgba(249, 115, 22, 0.08), transparent 20%),
+    #020617;
+  color: #e5e7eb;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  background-color: #030712;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.leaflet-control-attribution {
+  background: rgba(0, 0, 0, 0.55);
+  color: #cbd5e1;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+
+.expedition-marker .pulse {
+  width: 16px;
+  height: 16px;
+  background: radial-gradient(circle, #14b8a6 30%, rgba(20, 184, 166, 0.25) 70%);
+  border-radius: 50%;
+  box-shadow: 0 0 12px rgba(20, 184, 166, 0.8);
+  animation: pulse 2s infinite;
+}
+
+.threat-marker {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  box-shadow: 0 0 10px rgba(249, 115, 22, 0.65);
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.9);
+    opacity: 0.6;
+  }
+}
